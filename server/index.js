@@ -7,6 +7,9 @@ const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
+const workspaceRoutes = require('./routes/workspaces');
+app.use('/api/workspaces', workspaceRoutes);
+
 app.get('/', (req, res) => {
     res.send('Server is running');
 });
