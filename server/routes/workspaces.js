@@ -30,9 +30,8 @@ router.get('/', protect, async (req, res) => {
 
 router.get('/:id', protect, async (req, res) => {
     const workspaceId = req.params.id;
-
     try {
-        const workspace = await Workspace.findById(workspaceId);
+        const workspace = await Workspace.findById(workspaceId).populate('members', 'name');
         if (!workspace) return res.status(404).json({ message: 'Workspace not found' });
         else res.status(200).json(workspace);
     } catch (error) {

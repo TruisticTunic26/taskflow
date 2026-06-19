@@ -17,7 +17,10 @@ router.post('/register', async (req, res) => {
                 password: await bcrypt.hash(req.body.password, 10),
                 name: req.body.name
             });
-            res.status(201).json({ message: 'User registered successfully' });
+
+            const jwtToken = jsonWebToken.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '200h' });
+
+            res.status(201).json({ message: 'User registered successfully', token: jwtToken });
         } else {
             res.status(400).json({ message: 'User already exists' });
         }
@@ -31,7 +34,7 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ email: req.body.email });
 
         if (user && await bcrypt.compare(req.body.password, user.password)) {
-            const jwtToken = jsonWebToken.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '3h' });
+            const jwtToken = jsonWebToken.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '200h' });
 
             res.status(200).json({ message: 'Login successful', token: jwtToken });
         } else {
