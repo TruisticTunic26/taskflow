@@ -1,11 +1,24 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+const { setIO } = require('./socket');
 
 const app = express();
-app.use(express.json());
+const server = http.createServer(app);
 
-const cors = require('cors');
+const io = new Server(server, {
+    cors: {
+        origin: 'http://localhost:3000',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+    }
+});
+
+setIO(io);
+
+app.use(express.json());
 app.use(cors());
 
 const userRoutes = require('./routes/users');
@@ -24,11 +37,24 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 
+io.on('connection', (socket) => {
+    console.log('a user connected:', socket.id);
+
+    socket.on('joinWorkspace', (workspaceId) => {
+        socket.join(workspaceId);
+        console.log(`User joined workspace: ${workspaceId}`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('user disconnected:', socket.id);
+    });
+});
+
 const start = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Connected to MongoDB');
-        app.listen(process.env.PORT, () => {
+        server.listen(process.env.PORT, () => {
             console.log(`Server running on port ${process.env.PORT}`);
         });
     } catch (error) {

@@ -12,7 +12,7 @@ router.post('/register', async (req, res) => {
 
         if (UserExists == null) {
             // Create new user
-            await User.create({
+            const user = await User.create({
                 email: req.body.email,
                 password: await bcrypt.hash(req.body.password, 10),
                 name: req.body.name

@@ -1,10 +1,14 @@
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 function Dashboard() {
     const navigate = useNavigate();
     const [workspaces, setWorkspaces] = useState<any[]>([]);
+    const [userName, setUserName] = useState<string>('');
+    const [userId, setUserId] = useState<string>('');
+
     useEffect(() => {
         const fetchWorkspaces = async () => {
             const token = localStorage.getItem('token');
@@ -12,6 +16,12 @@ function Dashboard() {
                 navigate('/login');
                 return;
             }
+
+            const decoded: any = jwtDecode(token);
+            setUserId(decoded._id);
+
+            console.log('Decoded token:', decoded);
+
             try {
                 const response = await axios.get('http://localhost:5000/api/workspaces', {
                     headers: {
@@ -19,6 +29,13 @@ function Dashboard() {
                     }
                 });
                 setWorkspaces(response.data);
+
+                const userResponse = await axios.get(`http://localhost:5000/api/users/${decoded.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setUserName(userResponse.data.name);
             } catch (error) {
                 console.log(error);
             }
@@ -49,6 +66,11 @@ function Dashboard() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'left', gap: '20px', width: '40%' }}>
             <h1>Dashboard</h1>
+            <p>Welcome, {userName}!</p>
+            <button onClick={() => {
+                localStorage.removeItem('token');
+                navigate('/login');
+            }} style={{ alignSelf: 'flex-start' }}> Logout </button>
 
             <div style={{ display: 'flex', gap: '20px', flexDirection: 'row', width: '100%' }}>
                 <label> Create new workspace</label>
